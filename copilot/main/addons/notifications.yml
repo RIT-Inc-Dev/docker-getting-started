@@ -1,0 +1,46 @@
+Parameters:
+  App:
+    Type: String
+    Description: Your application's name.
+  Env:
+    Type: String
+    Description: The environment name your service, job, or workflow is being deployed to.
+  Name:
+    Type: String
+    Description: The name of the service, job, or workflow being deployed.
+  SNSSubscriptionEmail:
+    Type: String
+    Default: kazuaki.hamada@rit-inc.co.jp
+    Description: Email for Error Notice SNS Subscription.
+  PipelineName:
+    Type: String
+    Default: docker-getting-started-master
+    Description: Target pipeline name.
+
+Resources:
+  CodePipelineAlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${App}-${Env}-${Name}-CodePipelineAlertTopic'
+      DisplayName: !Sub '${App}-${Env}-${Name}-CodePipelineAlertTopic'
+      Subscription:
+        - Endpoint: !Ref SNSSubscriptionEmail
+          Protocol: email
+  CodeStarNotificationsRule:
+    Type: AWS::CodeStarNotifications::NotificationRule
+    Properties:
+      DetailType: FULL
+      EventTypeIds:
+        - codepipeline-pipeline-pipeline-execution-failed
+        - codepipeline-pipeline-pipeline-execution-canceled
+        - codepipeline-pipeline-pipeline-execution-started
+        - codepipeline-pipeline-pipeline-execution-resumed
+        - codepipeline-pipeline-pipeline-execution-succeeded
+        - codepipeline-pipeline-pipeline-execution-superseded
+      Name: !Sub '${App}-${Env}-${Name}-CodeStarNotifications-Rule'
+      Resource: !Sub
+        - 'arn:${AWS::Partition}:codepipeline:${AWS::Region}:${AWS::AccountId}:pipeline-${App}-${PipelineName}-*'
+        - PipelineName: !Ref PipelineName
+      Targets:
+        - TargetType: SNS
+          TargetAddress: !Ref CodePipelineAlertTopic
