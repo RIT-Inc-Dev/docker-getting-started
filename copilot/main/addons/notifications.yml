@@ -14,8 +14,12 @@ Parameters:
     Description: Email for Error Notice SNS Subscription.
   PipelineName:
     Type: String
-    Default: docker-getting-started-master
+    Default: pipeline-docker-getting-started-docker-getting-started-master-Pipeline-YWHBK8H5VGE5
     Description: Target pipeline name.
+  Version:
+    Type: String
+    Default: dwaodao
+    Description: Notification rule version.
 
 Resources:
   CodePipelineAlertTopic:
@@ -37,9 +41,11 @@ Resources:
         - codepipeline-pipeline-pipeline-execution-resumed
         - codepipeline-pipeline-pipeline-execution-succeeded
         - codepipeline-pipeline-pipeline-execution-superseded
-      Name: !Sub '${App}-${Env}-${Name}-CodeStarNotifications-Rule'
+      Name: !Sub
+        - '${App}-${Env}-${Name}-CSN-Rule-${Version}'
+        - Version: !Ref Version
       Resource: !Sub
-        - 'arn:${AWS::Partition}:codepipeline:${AWS::Region}:${AWS::AccountId}:pipeline-${App}-${PipelineName}-*'
+        - 'arn:${AWS::Partition}:codepipeline:${AWS::Region}:${AWS::AccountId}:${PipelineName}'
         - PipelineName: !Ref PipelineName
       Targets:
         - TargetType: SNS
